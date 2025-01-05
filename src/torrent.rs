@@ -1,5 +1,7 @@
 use serde::Deserialize;
-use serde_bencode::de;
+use serde_bencode::{de, ser};
+use serde_bytes::ByteBuf;
+use sha1::{Digest, Sha1};
 use std::fs::File;
 use std::io::Read;
 
@@ -12,7 +14,7 @@ pub struct Torrent {
     info: Info,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Info {
     /// suggested name to save the file / directory as
     #[serde(default)]
@@ -21,6 +23,8 @@ pub struct Info {
     /// number of bytes in each piece
     #[serde(rename = "piece length")]
     piece_length: usize,
+
+    pieces: ByteBuf,
 
     /// Size of the file in bytes, for single-file torrents
     #[serde(default)]
@@ -42,5 +46,15 @@ impl Torrent {
     pub fn print_info(&self) {
         println!("Tracker URL: {}", self.announce);
         println!("Length: {} bytes", self.info.length);
+        println!("Info hash: {}", self.info_hash());
+    }
+
+    fn info_hash(&self) -> String {
+        let bencoded = ser::to_bytes(&self.info).unwrap();
+        let mut hasher = Sha1::new();
+        hasher.update(&bencoded);
+        let result = hasher.finalize();
+
+        hex::encode(result)
     }
 }
