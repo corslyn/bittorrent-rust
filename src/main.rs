@@ -1,14 +1,25 @@
+#[macro_use]
+extern crate serde_derive;
+
 mod args;
+mod torrent;
+
 use args::*;
 
 use clap::Parser;
+use torrent::Torrent;
 
 fn main() {
     let cli = Cli::parse();
-
     match &cli.command {
-        Some(Commands::Decode { input }) => {
-            todo!("Decode beencoded string");
+        Some(Commands::Info { input_file }) => {
+            match Torrent::new(&input_file) {
+                Ok(torrent) => torrent.print_info(),
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
         }
         _ => {}
     }

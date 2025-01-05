@@ -9,9 +9,9 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Decodes a beencoded string
-    Decode {
-        /// The beencoded string to decode
-        input: String,
+    /// Outputs torrent file info (tracker url & length)
+    Info {
+        /// The torrent file
+        input_file: String,
     },
 }
