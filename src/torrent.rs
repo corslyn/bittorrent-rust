@@ -47,6 +47,12 @@ impl Torrent {
         println!("Tracker URL: {}", self.announce);
         println!("Length: {} bytes", self.info.length);
         println!("Info hash: {}", self.info_hash());
+        println!("Piece length: {}", self.info.piece_length);
+        println!("Piece Hashes:");
+
+        for hash in self.pieces_hashes().iter() {
+            println!("{hash}");
+        }
     }
 
     fn info_hash(&self) -> String {
@@ -56,5 +62,13 @@ impl Torrent {
         let result = hasher.finalize();
 
         hex::encode(result)
+    }
+
+    fn pieces_hashes(&self) -> Vec<String> {
+        self.info
+            .pieces
+            .chunks(20) // SHA-1 hash length is 20 bytes
+            .map(|chunk| hex::encode(chunk))
+            .collect()
     }
 }
