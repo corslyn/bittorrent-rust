@@ -3,6 +3,7 @@ extern crate serde_derive;
 
 mod args;
 mod torrent;
+mod tracker;
 
 use args::*;
 
@@ -21,6 +22,16 @@ fn main() {
                 }
             };
         }
+        Some(Commands::Peers { input_file }) => {
+            match Torrent::new(&input_file) {
+                Ok(torrent) => torrent.get_peers(),
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+        }
+
         _ => {}
     }
 }

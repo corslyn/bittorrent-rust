@@ -1,17 +1,18 @@
-use serde::Deserialize;
 use serde_bencode::{de, ser};
 use serde_bytes::ByteBuf;
 use sha1::{Digest, Sha1};
 use std::fs::File;
 use std::io::Read;
 
+use crate::tracker::TrackerRequest;
+
 #[derive(Debug, Deserialize)]
 pub struct Torrent {
     /// Tracker URL
     #[serde(default)]
-    announce: String,
+    pub announce: String,
 
-    info: Info,
+    pub info: Info,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -28,7 +29,7 @@ pub struct Info {
 
     /// Size of the file in bytes, for single-file torrents
     #[serde(default)]
-    length: usize,
+    pub length: usize,
 }
 
 impl Torrent {
@@ -46,7 +47,7 @@ impl Torrent {
     pub fn print_info(&self) {
         println!("Tracker URL: {}", self.announce);
         println!("Length: {} bytes", self.info.length);
-        println!("Info hash: {}", self.info_hash());
+        println!("Info hash: {}", hex::encode(self.info_hash()));
         println!("Piece length: {}", self.info.piece_length);
         println!("Piece Hashes:");
 
@@ -54,14 +55,11 @@ impl Torrent {
             println!("{hash}");
         }
     }
-
-    fn info_hash(&self) -> String {
+    pub fn info_hash(&self) -> Vec<u8> {
         let bencoded = ser::to_bytes(&self.info).unwrap();
         let mut hasher = Sha1::new();
         hasher.update(&bencoded);
-        let result = hasher.finalize();
-
-        hex::encode(result)
+        hasher.finalize().to_vec()
     }
 
     fn pieces_hashes(&self) -> Vec<String> {
@@ -70,5 +68,13 @@ impl Torrent {
             .chunks(20) // SHA-1 hash length is 20 bytes
             .map(|chunk| hex::encode(chunk))
             .collect()
+    }
+
+    pub fn get_peers(&self) {
+        let tracker_request = TrackerRequest::new(&self);
+        let peers = tracker_request.request_peers();
+        for peer in peers {
+            println!("{}:{}", peer.ip, peer.port);
+        }
     }
 }

@@ -14,4 +14,10 @@ pub enum Commands {
         /// The torrent file
         input_file: String,
     },
+
+    /// Outputs peers (ip:port)
+    Peers {
+        /// The torrent file
+        input_file: String,
+    },
 }
