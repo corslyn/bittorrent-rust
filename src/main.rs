@@ -1,7 +1,10 @@
+#![allow(dead_code)]
+
 #[macro_use]
 extern crate serde_derive;
 
 mod args;
+mod peer;
 mod torrent;
 mod tracker;
 
@@ -25,6 +28,18 @@ fn main() {
         Some(Commands::Peers { input_file }) => {
             match Torrent::new(&input_file) {
                 Ok(torrent) => torrent.get_peers(),
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+        }
+
+        Some(Commands::Handshake { input_file, peer }) => {
+            match Torrent::new(&input_file) {
+                Ok(torrent) => {
+                    torrent.handshake(peer);
+                }
                 Err(e) => {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);

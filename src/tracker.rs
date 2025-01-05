@@ -1,6 +1,6 @@
-use std::net::Ipv4Addr;
+use std::net::{Ipv4Addr, SocketAddrV4};
 
-use crate::torrent::Torrent;
+use crate::{peer::Peer, torrent::Torrent};
 use reqwest::{blocking::get, Url};
 use serde_bencode::de;
 use serde_bytes::ByteBuf;
@@ -37,18 +37,9 @@ pub struct TrackerResponse {
     #[serde(default)]
     interval: usize,
 
-    #[serde(rename = "min interval", default)]
-    min_interval: usize,
-
     // Peers as a byte string in compact format
     #[serde(rename = "peers")]
     peers_bin: ByteBuf,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Peer {
-    pub ip: Ipv4Addr,
-    pub port: u16,
 }
 
 impl TrackerRequest {
@@ -56,7 +47,7 @@ impl TrackerRequest {
         TrackerRequest {
             announce: torrent.announce.clone(),
             info_hash: encode_binary(&torrent.info_hash()).to_string(),
-            peer_id: "JeSuisFrancoisBayrou".to_string(),
+            peer_id: Torrent::generate_client_id(),
             port: 6881,
             uploaded: 0,
             downloaded: 0,
@@ -97,7 +88,9 @@ impl TrackerResponse {
                 if chunk.len() == 6 {
                     let ip = Ipv4Addr::new(chunk[0], chunk[1], chunk[2], chunk[3]);
                     let port = u16::from_be_bytes([chunk[4], chunk[5]]);
-                    Some(Peer { ip, port })
+                    Some(Peer {
+                        address: SocketAddrV4::new(ip, port),
+                    })
                 } else {
                     None
                 }

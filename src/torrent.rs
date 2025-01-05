@@ -1,8 +1,11 @@
+use rand::distributions::Alphanumeric;
+use rand::Rng;
 use serde_bencode::{de, ser};
 use serde_bytes::ByteBuf;
 use sha1::{Digest, Sha1};
 use std::fs::File;
 use std::io::Read;
+use std::net::SocketAddrV4;
 
 use crate::tracker::TrackerRequest;
 
@@ -74,7 +77,22 @@ impl Torrent {
         let tracker_request = TrackerRequest::new(&self);
         let peers = tracker_request.request_peers();
         for peer in peers {
-            println!("{}:{}", peer.ip, peer.port);
+            println!("{}", peer.address);
         }
+    }
+
+    pub fn handshake(&self, peer: &SocketAddrV4) {}
+
+    pub fn generate_client_id() -> String {
+        let prefix = "-RS1337-";
+        let random_suffix: String = rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(12)
+            .map(char::from)
+            .collect();
+        let client_id = format!("{}{}", prefix, random_suffix);
+
+        println!("Client ID: {}", client_id);
+        client_id
     }
 }

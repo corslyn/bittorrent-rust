@@ -1,3 +1,5 @@
+use std::net::SocketAddrV4;
+
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
@@ -19,5 +21,13 @@ pub enum Commands {
     Peers {
         /// The torrent file
         input_file: String,
+    },
+
+    Handshake {
+        /// The torrent file
+        input_file: String,
+
+        /// The peer to perform the handshake to (127.0.0.1:1234)
+        peer: SocketAddrV4,
     },
 }
