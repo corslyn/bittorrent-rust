@@ -10,6 +10,7 @@ pub struct Peer {
     pub address: SocketAddrV4,
 }
 
+#[derive(Debug, Serialize)]
 pub struct Handshake {
     length: usize,     // 19
     string: String,    // the string "BitTorrent protocol"
@@ -19,7 +20,7 @@ pub struct Handshake {
 }
 
 impl Handshake {
-    pub fn new(torrent: &Torrent, peer: SocketAddrV4) -> Handshake {
+    pub fn new(torrent: &Torrent) -> Handshake {
         Handshake {
             length: 19,
             string: "BitTorrent protocol".to_string(),

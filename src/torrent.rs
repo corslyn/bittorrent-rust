@@ -7,6 +7,7 @@ use std::fs::File;
 use std::io::Read;
 use std::net::SocketAddrV4;
 
+use crate::peer::Handshake;
 use crate::tracker::TrackerRequest;
 
 #[derive(Debug, Deserialize)]
@@ -81,7 +82,12 @@ impl Torrent {
         }
     }
 
-    pub fn handshake(&self, peer: &SocketAddrV4) {}
+    pub fn handshake(&self, peer: &SocketAddrV4) {
+        let handshake = Handshake::new(&self);
+        let handshake_message = ser::to_bytes(&handshake).unwrap();
+        let handshake_message = String::from_utf8(handshake_message).unwrap();
+        println!("Handshake message: {}", handshake_message);
+    }
 
     pub fn generate_client_id() -> String {
         let prefix = "-RS1337-";
