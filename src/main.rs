@@ -38,7 +38,7 @@ fn main() {
         Some(Commands::Handshake { input_file, peer }) => {
             match Torrent::new(&input_file) {
                 Ok(torrent) => {
-                    torrent.handshake(peer);
+                    torrent.handshake_with_peer(peer);
                 }
                 Err(e) => {
                     eprintln!("Error: {}", e);

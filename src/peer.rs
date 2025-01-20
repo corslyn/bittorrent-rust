@@ -10,13 +10,13 @@ pub struct Peer {
     pub address: SocketAddrV4,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub struct Handshake {
-    length: usize,     // 19
-    string: String,    // the string "BitTorrent protocol"
-    reserved: ByteBuf, // 8 null bytes
-    infohash: String,
-    peer_id: String,
+    pub length: usize,     // 19
+    pub string: String,    // the string "BitTorrent protocol"
+    pub reserved: ByteBuf, // 8 null bytes
+    pub infohash: ByteBuf, // sha1 hash (20 bytes)
+    pub peer_id: String,
 }
 
 impl Handshake {
@@ -25,7 +25,7 @@ impl Handshake {
             length: 19,
             string: "BitTorrent protocol".to_string(),
             reserved: ByteBuf::from(vec![0; 8]),
-            infohash: encode_binary(&torrent.info_hash()).to_string(),
+            infohash: ByteBuf::from(torrent.info_hash()),
             peer_id: Torrent::generate_client_id(),
         }
     }

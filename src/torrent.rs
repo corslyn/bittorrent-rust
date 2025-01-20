@@ -4,8 +4,8 @@ use serde_bencode::{de, ser};
 use serde_bytes::ByteBuf;
 use sha1::{Digest, Sha1};
 use std::fs::File;
-use std::io::Read;
-use std::net::SocketAddrV4;
+use std::io::{Read, Write};
+use std::net::{SocketAddrV4, TcpStream};
 
 use crate::peer::Handshake;
 use crate::tracker::TrackerRequest;
@@ -82,11 +82,44 @@ impl Torrent {
         }
     }
 
-    pub fn handshake(&self, peer: &SocketAddrV4) {
-        let handshake = Handshake::new(&self);
-        let handshake_message = ser::to_bytes(&handshake).unwrap();
-        let handshake_message = String::from_utf8(handshake_message).unwrap();
-        println!("Handshake message: {}", handshake_message);
+    pub fn handshake_with_peer(&self, peer_address: &SocketAddrV4) {
+        // Step 1: Create the handshake message
+        let handshake = Handshake::new(self);
+        let handshake_bytes = {
+            let mut bytes = Vec::new();
+            bytes.push(handshake.length as u8); // Add length of protocol string
+            bytes.extend_from_slice(handshake.string.as_bytes()); // Add protocol string
+            bytes.extend_from_slice(&handshake.reserved); // Add reserved bytes
+            bytes.extend_from_slice(&handshake.infohash); // Add info hash
+            bytes.extend_from_slice(handshake.peer_id.as_bytes()); // Add peer ID
+            bytes
+        };
+
+        // Step 2: Connect to the peer
+        let mut stream = TcpStream::connect(peer_address).unwrap();
+
+        // Step 3: Send the handshake message
+        stream.write_all(&handshake_bytes).unwrap();
+
+        println!("Sent handshake to peer: {}", peer_address);
+
+        // Step 4: Receive the response handshake
+        let mut response = [0u8; 68]; // Handshake is always 68 bytes
+        stream.read_exact(&mut response).unwrap();
+
+        // Step 5: Validate the response
+        // Extract the info hash from the response and compare it
+        let received_infohash = &response[28..48]; // Info hash starts at byte 28 and is 20 bytes
+        if received_infohash != handshake.infohash.as_ref() {
+            panic!("Info hash mismatch! Peer is not serving the same torrent.");
+        }
+
+        println!(
+            "Handshake successful with peer: {} (Info hash validated)",
+            peer_address
+        );
+        let peer_id = hex::encode(&response[48..68]);
+        println!("Remote peer id: {}", peer_id)
     }
 
     pub fn generate_client_id() -> String {
